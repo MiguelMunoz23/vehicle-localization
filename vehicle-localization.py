@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """
 vehicle-localization.py
 
@@ -12,8 +13,12 @@ Lecturer: Dr. Andrés Hernández Gutiérrez
 Date of creation: 28 August 2022
 """
 
+from math import sin, cos
+
 # Import useful libraries
 import pygame
+import argparse
+from numpy import deg2rad
 
 # Initialize pygame and constants
 pygame.init()
@@ -32,7 +37,7 @@ class Car:
     CAR_WIDTH = 40
     CAR_HEIGHT = 20
     VEL = 1  # 100 km/h
-    ANGLE_STEP = 1.2
+    ANGLE_STEP = 0.7
 
     def __init__(self):
         self.x = 0
@@ -48,23 +53,29 @@ class Car:
                                  HEIGHT // 2 - self.CAR_HEIGHT // 2 + self.y))
 
     def move(self, up=None, up_left=None, up_right=None, down=None, down_left=None, down_right=None):
-        # Check every condition and move the car
-        if up:
-            self.x += self.VEL
-        if up_left:
-            self.x += self.VEL
+        # Check every condition and move the car accordingly
+        if up:  # Forward
+            self.x += self.VEL * cos(deg2rad(self.angle))
+            self.y -= self.VEL * sin(deg2rad(self.angle))
+        if up_left:  # Forward left
+            self.x += self.VEL * cos(deg2rad(self.angle))
+            self.y -= self.VEL * sin(deg2rad(self.angle))
             self.angle += self.ANGLE_STEP
-        if up_right:
-            self.x += self.VEL
+        if up_right:  # Forward right
+            self.x += self.VEL * cos(deg2rad(self.angle))
+            self.y -= self.VEL * sin(deg2rad(self.angle))
             self.angle -= self.ANGLE_STEP
-        if down:
-            self.x -= self.VEL
-        if down_left:
-            self.x -= self.VEL
+        if down:  # Backwards
+            self.x -= self.VEL * cos(deg2rad(self.angle))
+            self.y += self.VEL * sin(deg2rad(self.angle))
+        if down_left:  # Backwards left
+            self.x -= self.VEL * cos(deg2rad(self.angle))
+            self.y += self.VEL * sin(deg2rad(self.angle))
+            self.angle -= self.ANGLE_STEP
+        if down_right:  # Backwards right
+            self.x -= self.VEL * cos(deg2rad(self.angle))
+            self.y += self.VEL * sin(deg2rad(self.angle))
             self.angle += self.ANGLE_STEP
-        if down_right:
-            self.x -= self.VEL
-            self.angle -= self.ANGLE_STEP
 
 
 def draw(window, car):
@@ -109,4 +120,14 @@ def main():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Give parameters for the car")
+    parser.add_argument('--vehicle_speed', type=int, help="Speed of the vehicle [km/h]")
+    parser.add_argument('--lf', type=float, help="Distance from vehicle's center of mass to the front wheel axle [m]")
+    parser.add_argument('--lb', type=float, help="Distance from vehicle's center of mass to the back wheel axle [m]")
+    parser.add_argument('--x0', type=float, help="x-coordinate for the initial position [m]")
+    parser.add_argument('--y0', type=float, help="y-coordinate for the initial position [m]")
+    parser.add_argument('--phi0', type=float, help="Initial Heading Angle [°]")
+    parser.add_argument('--df0', type=float, help="Initial front wheel rotation angle [°]")
+    parser.add_argument('--dt', type=float, help="Sampling time interval [sec]")
+    args = parser.parse_args()
     main()
