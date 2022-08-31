@@ -13,13 +13,12 @@ Lecturer: Dr. Andrés Hernández Gutiérrez
 Date of creation: 28 August 2022
 """
 
+import argparse
 from math import sin, cos
 
 # Import useful libraries
 import pygame
-import argparse
 from numpy import deg2rad
-import time
 
 # Initialize pygame and constants
 pygame.init()
@@ -47,8 +46,8 @@ class Car:
         self.x = 0
         self.y = 0
         self.past_positions = []
-        self.car_x_center = WIDTH // 2 - self.width // 2
-        self.car_y_center = HEIGHT // 2 - self.height // 2
+        self.x_pos = 0
+        self.y_pos = 0
         self.angle = 0
         self.x_vel = 0
         self.y_vel = 0
@@ -56,20 +55,20 @@ class Car:
         self.bounding_box = None
 
     def draw(self, window):
+        self.x_pos = WIDTH // 2 + self.x
+        self.y_pos = HEIGHT // 2 + self.y
+
         # Rotate the image with respect to the angle
         self.image = pygame.transform.rotate(
             pygame.transform.scale(pygame.image.load('car.png'), (self.width, self.height)), self.angle)
-        # Bounding box
-        self.bounding_box = self.image.get_bounding_rect()
-        self.bounding_box.center = self.car_x_center + self.x + self.image.get_width()//2,\
-                                   self.car_y_center + self.y + self.image.get_height()//2
-        pygame.draw.rect(window, GREEN, self.bounding_box, 1)
-        # Code for leaving trail
-        self.past_positions.append([self.bounding_box.center[0], self.bounding_box.center[1]])
+
+        # Leaving trail
+        self.past_positions.append([self.x_pos, self.y_pos])
         for point in self.past_positions:
             pygame.draw.circle(window, YELLOW, point, 2)
+
         # Display car image in the center of the screen and add the x and y coordinate
-        window.blit(self.image, (self.car_x_center + self.x, self.car_y_center + self.y))
+        window.blit(self.image, self.image.get_rect(center=(self.x_pos, self.y_pos)))
 
     def move(self, up=None, up_left=None, up_right=None, down=None, down_left=None, down_right=None):
         # Check every condition and move the car accordingly
@@ -107,13 +106,13 @@ def draw(window, car):
 
 def handle_movement(car, keys):
     # Check which keys are being pressed
-    if keys[pygame.K_UP] and not(keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]):
+    if keys[pygame.K_UP] and not (keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]):
         car.move(up=True)
     if keys[pygame.K_LEFT] and keys[pygame.K_UP]:
         car.move(up_left=True)
     if keys[pygame.K_RIGHT] and keys[pygame.K_UP]:
         car.move(up_right=True)
-    if keys[pygame.K_DOWN] and not(keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]):
+    if keys[pygame.K_DOWN] and not (keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]):
         car.move(down=True)
     if keys[pygame.K_LEFT] and keys[pygame.K_DOWN]:
         car.move(down_left=True)
