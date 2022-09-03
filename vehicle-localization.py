@@ -33,7 +33,7 @@ pygame.display.set_caption("Ackerman Steering Simulator | Advanced Robotics")
 # Define colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-YELLOW = (255, 255, 0)
+SKY_BLUE = (0, 170, 228)
 GREEN = (0, 255, 0)
 
 
@@ -72,7 +72,7 @@ class Car:
         # Leaving trail
         self.past_positions.append([self.x_pos, self.y_pos])
         for point in self.past_positions:
-            pygame.draw.circle(window, YELLOW, point, 2)
+            pygame.draw.circle(window, SKY_BLUE, point, 2)
 
         # Display car image in the center of the screen and add the x and y coordinate
         window.blit(self.image, self.image.get_rect(center=(self.x_pos, self.y_pos)))
@@ -150,21 +150,19 @@ def handle_movement(car, keys):
     # Check which keys are being pressed
     if keys[pygame.K_UP] and not (keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]):
         car.move(up=True)
-    if keys[pygame.K_LEFT] and keys[pygame.K_UP]:
+    if keys[pygame.K_LEFT] and keys[pygame.K_UP] and not keys[pygame.K_RIGHT]:
         car.move(up_left=True)
-    if keys[pygame.K_RIGHT] and keys[pygame.K_UP]:
+    if keys[pygame.K_RIGHT] and keys[pygame.K_UP] and not keys[pygame.K_LEFT]:
         car.move(up_right=True)
     if keys[pygame.K_DOWN] and not (keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]):
         car.move(down=True)
-    if keys[pygame.K_LEFT] and keys[pygame.K_DOWN]:
+    if keys[pygame.K_LEFT] and keys[pygame.K_DOWN] and not keys[pygame.K_RIGHT]:
         car.move(down_left=True)
-    if keys[pygame.K_RIGHT] and keys[pygame.K_DOWN]:
+    if keys[pygame.K_RIGHT] and keys[pygame.K_DOWN] and not keys[pygame.K_LEFT]:
         car.move(down_right=True)
-    if keys[pygame.K_f] and car.VEL <= 3 and (keys[pygame.K_UP] or keys[pygame.K_DOWN] or
-                                              keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]):
+    if keys[pygame.K_f] and car.VEL <= 3 and (keys[pygame.K_UP] or keys[pygame.K_DOWN]):
         car.move(speed_up=True)
-    if keys[pygame.K_s] and car.VEL > 0.1 and (keys[pygame.K_UP] or keys[pygame.K_DOWN] or
-                                               keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]):
+    if keys[pygame.K_s] and car.VEL > 0.1 and (keys[pygame.K_UP] or keys[pygame.K_DOWN]):
         car.move(speed_down=True)
 
 
