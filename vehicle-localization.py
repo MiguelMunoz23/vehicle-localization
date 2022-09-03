@@ -14,11 +14,11 @@ Date of creation: 28 August 2022
 """
 
 import argparse
-from math import sin, cos, atan, tan
+from math import sin, cos, atan2, tan, pi
 
 # Import useful libraries
 import pygame
-from numpy import deg2rad
+from numpy import deg2rad, rad2deg
 
 # Initialize pygame and constants
 pygame.init()
@@ -38,7 +38,6 @@ GREEN = (0, 255, 0)
 
 
 class Car:
-    VEL = 1  # 100 [km/h]
     ANGLE_STEP = 1.2  # [°]
     DELTA_T = 0.1  # [sec]
     LF = 1.4  # [m]
@@ -53,13 +52,16 @@ class Car:
         self.x_pos = 0
         self.y_pos = 0
         self.angle = 0
+        self.image = None
+        self.vel, self.vel_k_1 = 1, 0  # 100 [km/h]
         self.x_vel = 0
         self.y_vel = 0
-        self.image = None
-        self.beta_k = 0
-        self.x_k = 0
-        self.y_k = 0
-        self.phi = 0
+
+        self.beta_k_1 = 0
+        self.delta_k, self.delta_k_1 = 0, 0
+        self.x_k, self.x_k_1 = 0, 0
+        self.y_k, self.y_k_1 = 0, 0
+        self.phi, self.phi_k_1 = 0, 0
 
     def draw(self, window):
         self.x_pos = WIDTH // 2 + self.x
@@ -78,40 +80,45 @@ class Car:
         window.blit(self.image, self.image.get_rect(center=(self.x_pos, self.y_pos)))
 
     def move(self, up=None, up_left=None, up_right=None, down=None, down_left=None, down_right=None, speed_up=None,
-             speed_down=None):
+             speed_down=None, not_moving=None):
+        self.vel_k_1 = self.vel
         # Check every condition and move the car accordingly
-        self.x_vel = self.VEL * cos(deg2rad(self.angle))
-        self.y_vel = self.VEL * sin(deg2rad(self.angle))
+        self.x_vel = self.vel * cos(deg2rad(self.angle))
+        self.y_vel = self.vel * sin(deg2rad(self.angle))
         if up:  # Forward
             self.x += self.x_vel
             self.y -= self.y_vel
+            self.delta_k = 0
         if up_left:  # Forward left
             self.x += self.x_vel
             self.y -= self.y_vel
-            self.angle += self.ANGLE_STEP
+            self.delta_k = self.ANGLE_STEP
         if up_right:  # Forward right
             self.x += self.x_vel
             self.y -= self.y_vel
-            self.angle -= self.ANGLE_STEP
+            self.delta_k = self.ANGLE_STEP * -1
         if down:  # Backwards
             self.x -= self.x_vel
             self.y += self.y_vel
+            self.delta_k = 0
         if down_left:  # Backwards left
             self.x -= self.x_vel
             self.y += self.y_vel
-            self.angle -= self.ANGLE_STEP
+            self.delta_k = self.ANGLE_STEP * -1
         if down_right:  # Backwards right
             self.x -= self.x_vel
             self.y += self.y_vel
-            self.angle += self.ANGLE_STEP
+            self.delta_k = self.ANGLE_STEP
         if speed_up:
-            self.VEL += 0.1
+            self.vel += 0.01
         if speed_down:
-            self.VEL -= 0.1
+            self.vel -= 0.01
+        if not_moving:
+            self.vel_k_1 = 0
 
     def print_parameters(self, window):
         texts = ["CONFIG. PARAMS",
-                 f"Speed: {(self.VEL*100):.2f} km/h",
+                 f"Speed: {(self.vel*100):.2f} km/h",
                  f"\u0394T: {self.DELTA_T} s",
                  f"\u0394f increment: {self.ANGLE_STEP} °",
                  f"Lb: {self.LB} m",
@@ -126,14 +133,23 @@ class Car:
             i += 15
 
     def apply_equations(self):
-        self.beta_k = atan(self.LB * tan(self.angle) / (self.LF + self.LB))
-        self.x_k = self.x + self.VEL * self.DELTA_T * cos(self.angle + self.beta_k)
-        self.y_k = self.y + self.VEL * self.DELTA_T * cos(self.angle + self.beta_k)
-        self.phi = self.phi + self.VEL * self.DELTA_T * (cos(self.beta_k) * tan(self.angle) / (self.LF + self.LB))
+        self.delta_k_1 = self.delta_k
+        self.x_k_1 = self.x_k
+        self.y_k_1 = self.y_k
+        self.phi_k_1 = self.phi
+        self.angle = rad2deg(self.phi)
+
+        self.beta_k_1 = atan2((self.LB * tan(deg2rad(self.delta_k_1))), (self.LF + self.LB))
+        self.x_k = self.x_k_1 + 100/3.6 * self.vel_k_1 * self.DELTA_T * cos(self.phi_k_1 + self.beta_k_1)
+        self.y_k = self.y_k_1 + 100/3.6 * self.vel_k_1 * self.DELTA_T * sin(self.phi_k_1 + self.beta_k_1)
+        self.phi = (self.phi_k_1 + 100/3.6 * self.vel_k_1 * self.DELTA_T * cos(self.beta_k_1) * tan(
+            deg2rad(self.delta_k_1)) / (self.LF + self.LB)) % (2 * pi)
+        print(f"Beta: {rad2deg(self.beta_k_1):.3f}°, x: {self.x_k:.3f} m, y: {self.y_k:.3f} m, "
+              f"heading_angle: {rad2deg(self.phi):.4f}")
 
     def print_position(self, window):
         self.apply_equations()
-        position_str = f"({self.x_k:.3f} m, {self.y_k:.3f} m, {self.phi:.3f} °)"
+        position_str = f"({self.x_k:.3f} m, {self.y_k:.3f} m, {(rad2deg(self.phi)):.3f} °)"
         position_rendered = FONT.render(position_str, True, GREEN)
         window.blit(position_rendered, (self.x_pos + 15, self.y_pos + 15))
 
@@ -160,10 +176,12 @@ def handle_movement(car, keys):
         car.move(down_left=True)
     if keys[pygame.K_RIGHT] and keys[pygame.K_DOWN] and not keys[pygame.K_LEFT]:
         car.move(down_right=True)
-    if keys[pygame.K_f] and car.VEL <= 3 and (keys[pygame.K_UP] or keys[pygame.K_DOWN]):
+    if keys[pygame.K_f] and car.vel < 2.99 and (keys[pygame.K_UP] or keys[pygame.K_DOWN]):
         car.move(speed_up=True)
-    if keys[pygame.K_s] and car.VEL > 0.1 and (keys[pygame.K_UP] or keys[pygame.K_DOWN]):
+    if keys[pygame.K_s] and car.vel > 0.01 and (keys[pygame.K_UP] or keys[pygame.K_DOWN]):
         car.move(speed_down=True)
+    if not (keys[pygame.K_UP] or keys[pygame.K_DOWN] or keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]):
+        car.move(not_moving=True)
 
 
 def main():
