@@ -22,7 +22,7 @@ from numpy import deg2rad, rad2deg
 
 # Initialize pygame and constants
 pygame.init()
-FPS = 120
+FPS = 60
 FONT = pygame.font.Font(None, 20)
 
 # Create a window
@@ -89,17 +89,17 @@ class Car:
         if up:  # Forward
             self.delta_k = 0
         if up_left:  # Forward left
-            self.delta_k = self.ANGLE_STEP
-        if up_right:  # Forward right
             self.delta_k = self.ANGLE_STEP * -1
+        if up_right:  # Forward right
+            self.delta_k = self.ANGLE_STEP
         if down:  # Backwards
             self.delta_k = 0
             self.vel_k_1 *= -1
         if down_left:  # Backwards left
-            self.delta_k = self.ANGLE_STEP * -1
+            self.delta_k = self.ANGLE_STEP
             self.vel_k_1 *= -1
         if down_right:  # Backwards right
-            self.delta_k = self.ANGLE_STEP
+            self.delta_k = self.ANGLE_STEP * -1
             self.vel_k_1 *= -1
         if speed_up:
             self.vel += self.SPEED_STEP
@@ -161,15 +161,15 @@ def handle_movement(car, keys):
         moving = True
     if keys[pygame.K_UP] and not (keys[pygame.K_DOWN] or keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]):
         car.move(up=True)
-    if keys[pygame.K_LEFT] and keys[pygame.K_UP] and not keys[pygame.K_RIGHT]:
+    if keys[pygame.K_UP] and keys[pygame.K_LEFT] and not (keys[pygame.K_DOWN] or keys[pygame.K_RIGHT]):
         car.move(up_left=True)
-    if keys[pygame.K_RIGHT] and keys[pygame.K_UP] and not keys[pygame.K_LEFT]:
+    if keys[pygame.K_UP] and keys[pygame.K_RIGHT] and not (keys[pygame.K_DOWN] or keys[pygame.K_LEFT]):
         car.move(up_right=True)
     if keys[pygame.K_DOWN] and not (keys[pygame.K_UP] or keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]):
         car.move(down=True)
-    if keys[pygame.K_LEFT] and keys[pygame.K_DOWN] and not keys[pygame.K_RIGHT]:
+    if keys[pygame.K_DOWN] and keys[pygame.K_LEFT] and not (keys[pygame.K_UP] or keys[pygame.K_RIGHT]):
         car.move(down_left=True)
-    if keys[pygame.K_RIGHT] and keys[pygame.K_DOWN] and not keys[pygame.K_LEFT]:
+    if keys[pygame.K_DOWN] and keys[pygame.K_RIGHT] and not (keys[pygame.K_UP] or keys[pygame.K_LEFT]):
         car.move(down_right=True)
     if keys[pygame.K_f] and car.vel < UPPER_SPEED_LIMIT and moving:
         car.move(speed_up=True)
