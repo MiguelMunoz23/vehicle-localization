@@ -39,29 +39,30 @@ GREEN = (0, 255, 0)
 
 class Car:
     ANGLE_STEP = 1.2  # [°]
-    DELTA_T = 0.1  # [sec]
-    LF = 1.4  # [m]
-    LB = 1.2  # [m]
 
-    def __init__(self):
+    def __init__(self, vehicle_speed, lf, lb, x0, y0, phi0, df0, dt):
+        self.vel, self.vel_k_1 = vehicle_speed / 100, 0  # 1 = 100 [km/h]
+        self.lf = lf
+        self.lb = lb
+        self.x_pos = x0
+        self.y_pos = y0
+        self.phi, self.phi_k_1 = phi0, phi0
+        self.delta_k, self.delta_k_1 = df0, df0
+        self.delta_t = dt
+
+        self.image = None
         self.width = 40
         self.height = 20
         self.x = 0
         self.y = 0
-        self.past_positions = []
-        self.x_pos = 0
-        self.y_pos = 0
         self.angle = 0
-        self.image = None
-        self.vel, self.vel_k_1 = 1, 0  # 100 [km/h]
+        self.past_positions = []
         self.x_vel = 0
         self.y_vel = 0
 
         self.beta_k_1 = 0
-        self.delta_k, self.delta_k_1 = 0, 0
         self.x_k, self.x_k_1 = 0, 0
         self.y_k, self.y_k_1 = 0, 0
-        self.phi, self.phi_k_1 = 0, 0
 
     def draw(self, window):
         self.x_pos = WIDTH // 2 + self.x
@@ -122,10 +123,10 @@ class Car:
     def print_parameters(self, window):
         texts = ["CONFIG. PARAMS",
                  f"Speed: {(self.vel*100):.2f} km/h",
-                 f"\u0394T: {self.DELTA_T} s",
+                 f"\u0394T: {self.delta_t} s",
                  f"\u0394f increment: {self.ANGLE_STEP} °",
-                 f"Lb: {self.LB} m",
-                 f"Lf: {self.LF} m"]
+                 f"Lb: {self.lb} m",
+                 f"Lf: {self.lf} m"]
         text_x, text_y = 20, 20
         i = 0
         for text in texts:
@@ -142,11 +143,11 @@ class Car:
         self.phi_k_1 = self.phi
         self.angle = rad2deg(self.phi)
 
-        self.beta_k_1 = atan2((self.LB * tan(deg2rad(self.delta_k_1))), (self.LF + self.LB))
-        self.x_k = self.x_k_1 + 100/3.6 * self.vel_k_1 * self.DELTA_T * cos(self.phi_k_1 + self.beta_k_1)
-        self.y_k = self.y_k_1 + 100/3.6 * self.vel_k_1 * self.DELTA_T * sin(self.phi_k_1 + self.beta_k_1)
-        self.phi = (self.phi_k_1 + 100/3.6 * self.vel_k_1 * self.DELTA_T * cos(self.beta_k_1) * tan(
-            deg2rad(self.delta_k_1)) / (self.LF + self.LB)) % (2 * pi)
+        self.beta_k_1 = atan2((self.lb * tan(deg2rad(self.delta_k_1))), (self.lf + self.lb))
+        self.x_k = self.x_k_1 + 100/3.6 * self.vel_k_1 * self.delta_t * cos(self.phi_k_1 + self.beta_k_1)
+        self.y_k = self.y_k_1 + 100/3.6 * self.vel_k_1 * self.delta_t * sin(self.phi_k_1 + self.beta_k_1)
+        self.phi = (self.phi_k_1 + 100/3.6 * self.vel_k_1 * self.delta_t * cos(self.beta_k_1) * tan(
+            deg2rad(self.delta_k_1)) / (self.lf + self.lb)) % (2 * pi)
         print(f"Beta: {rad2deg(self.beta_k_1):.3f}°, x: {self.x_k:.3f} m, y: {self.y_k:.3f} m, "
               f"heading_angle: {rad2deg(self.phi):.4f}")
 
@@ -187,11 +188,11 @@ def handle_movement(car, keys):
         car.move(not_moving=True)
 
 
-def main():
+def main(vehicle_speed, lf, lb, x0, y0, phi0, df0, dt):
     run = True
     clock = pygame.time.Clock()
 
-    car = Car()
+    car = Car(vehicle_speed, lf, lb, x0, y0, phi0, df0, dt)
     while run:
         clock.tick(FPS)
         draw(WINDOW, car)
@@ -217,12 +218,4 @@ if __name__ == '__main__':
     parser.add_argument('--df0', type=float, help="Initial front wheel rotation angle [°]")
     parser.add_argument('--dt', type=float, help="Sampling time interval [sec]")
     args = parser.parse_args()
-    vehicle_speed = args.vehicle_speed
-    lf = args.lf
-    lb = args.lb
-    x0 = args.x0
-    y0 = args.y0
-    phi0 = args.phi0
-    df0 = args.df0
-    dt = args.dt
-    main()
+    main(args.vehicle_speed, args.lf, args.lb, args.x0, args.y0, args.phi0, args.df0, args.dt)
