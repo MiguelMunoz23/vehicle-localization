@@ -101,18 +101,21 @@ class Car:
             self.x -= self.x_vel
             self.y += self.y_vel
             self.delta_k = 0
+            self.vel_k_1 *= -1
         if down_left:  # Backwards left
             self.x -= self.x_vel
             self.y += self.y_vel
             self.delta_k = self.ANGLE_STEP * -1
+            self.vel_k_1 *= -1
         if down_right:  # Backwards right
             self.x -= self.x_vel
             self.y += self.y_vel
             self.delta_k = self.ANGLE_STEP
+            self.vel_k_1 *= -1
         if speed_up:
-            self.vel += 0.01
+            self.vel += 0.05
         if speed_down:
-            self.vel -= 0.01
+            self.vel -= 0.05
         if not_moving:
             self.vel_k_1 = 0
 
@@ -214,4 +217,12 @@ if __name__ == '__main__':
     parser.add_argument('--df0', type=float, help="Initial front wheel rotation angle [°]")
     parser.add_argument('--dt', type=float, help="Sampling time interval [sec]")
     args = parser.parse_args()
+    vehicle_speed = args.vehicle_speed
+    lf = args.lf
+    lb = args.lb
+    x0 = args.x0
+    y0 = args.y0
+    phi0 = args.phi0
+    df0 = args.df0
+    dt = args.dt
     main()
